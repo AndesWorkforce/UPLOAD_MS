@@ -1,0 +1,317 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Productivity Report</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: Arial, sans-serif; 
+      padding: 20px; 
+      color: #000000;
+      background: #FFFFFF;
+    }
+    .header {
+      margin-bottom: 24px;
+      border-bottom: 2px solid #0097B2;
+      padding-bottom: 16px;
+    }
+    h1 { 
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #000000;
+    }
+    .subtitle { 
+      font-size: 16px;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+    .info-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .pill { 
+      display: inline-block;
+      padding: 4px 12px;
+      background: #E2E8F0;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .section {
+      margin-bottom: 24px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #000000;
+    }
+    .filters-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px;
+      background: #F8FAFC;
+      border-radius: 8px;
+    }
+    .filter-item {
+      font-size: 13px;
+    }
+    .filter-item strong {
+      color: #0097B2;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .metric-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .metric-label {
+      font-size: 11px;
+      color: #64748B;
+      margin-bottom: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .metric-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: #0097B2;
+    }
+    .performers-section {
+      display: flex;
+      gap: 24px;
+      padding: 12px;
+      background: #F8FAFC;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .performer {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .performer-label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .performer-name {
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .performer-value {
+      font-size: 14px;
+      font-weight: bold;
+      margin-left: auto;
+    }
+    table { 
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      background: #FFFFFF;
+    }
+    thead {
+      background: #F8FAFC;
+      position: sticky;
+      top: 0;
+    }
+    th { 
+      border: 1px solid #E2E8F0;
+      padding: 8px 6px;
+      text-align: center;
+      font-weight: 600;
+      color: #000000;
+      font-size: 11px;
+    }
+    td { 
+      border: 1px solid #E2E8F0;
+      padding: 8px 6px;
+      text-align: center;
+      font-size: 10px;
+    }
+    tbody tr:nth-child(even) {
+      background: #E2E2E2;
+    }
+    tbody tr:nth-child(odd) {
+      background: #FFFFFF;
+    }
+    .activity-high {
+      color: #2EC36D;
+      font-weight: bold;
+    }
+    .activity-low {
+      color: #FF0004;
+      font-weight: bold;
+    }
+    .page-break {
+      page-break-after: always;
+    }
+    @media print {
+      body { padding: 10px; }
+      .header { page-break-after: avoid; }
+      table { page-break-inside: auto; }
+      tr { page-break-inside: avoid; page-break-after: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 Productivity Report</h1>
+    <div class="subtitle">Period: {{periodStart}} - {{periodEnd}}</div>
+    <div class="info-pills">
+      <span class="pill">📈 Metrics: {{summary.metricsCount}}</span>
+      <span class="pill">🌍 Env: {{summary.environment}}</span>
+      <span class="pill">🔌 Source: {{summary.source}}</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔍 Filters Applied</div>
+    <div class="filters-row">
+      {{#if hasFilters}}
+        {{#each filters}}
+          <span class="filter-item"><strong>{{@key}}:</strong> {{this}}</span>
+        {{/each}}
+      {{else}}
+        <em>No filters applied</em>
+      {{/if}}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📊 Summary Metrics</div>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Total Users</div>
+        <div class="metric-value">{{summary.totalUsers}}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Total Time Worked</div>
+        <div class="metric-value">{{summary.totalTimeWorked}}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Average Activity</div>
+        <div class="metric-value">{{summary.averageActivity}}%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Average Productivity</div>
+        <div class="metric-value">{{summary.averageProductivity}}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Total Active Beats</div>
+        <div class="metric-value">{{formatNumber summary.totalActiveBeats}}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Total Idle Beats</div>
+        <div class="metric-value">{{formatNumber summary.totalIdleBeats}}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Total Keyboard Inputs</div>
+        <div class="metric-value">{{formatNumber summary.totalKeyboardInputs}}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Total Mouse Clicks</div>
+        <div class="metric-value">{{formatNumber summary.totalMouseClicks}}</div>
+      </div>
+    </div>
+
+    {{#if hasPerformers}}
+    <div class="performers-section">
+      <div class="performer">
+        <span class="performer-label">🏆 Most Active:</span>
+        <span class="performer-name">{{summary.mostActiveUser.name}}</span>
+        <span class="performer-value" style="color: #2EC36D;">{{summary.mostActiveUser.activityPercentage}}%</span>
+      </div>
+      <div class="performer">
+        <span class="performer-label">📊 Least Active:</span>
+        <span class="performer-name">{{summary.leastActiveUser.name}}</span>
+        <span class="performer-value" style="color: #FF0004;">{{summary.leastActiveUser.activityPercentage}}%</span>
+      </div>
+    </div>
+    {{/if}}
+  </div>
+
+  <div class="section">
+    <div class="section-title">👥 Activity Details ({{items.length}} users)</div>
+    {{#if items.length}}
+    <table>
+      <thead>
+        <tr>
+          {{#if showField_contractorName}}
+          <th>User</th>
+          {{/if}}
+          {{#if showField_jobPosition}}
+          <th>Job Position</th>
+          {{/if}}
+          {{#if showField_clientName}}
+          <th>Client</th>
+          {{/if}}
+          {{#if showField_teamName}}
+          <th>Team</th>
+          {{/if}}
+          {{#if showField_country}}
+          <th>Country</th>
+          {{/if}}
+          {{#if showField_timeWorked}}
+          <th>Time</th>
+          {{/if}}
+          {{#if showField_activityPercentage}}
+          <th>Activity</th>
+          {{/if}}
+          {{#if showField_productivityScore}}
+          <th>Productivity</th>
+          {{/if}}
+        </tr>
+      </thead>
+      <tbody>
+        {{#each items}}
+        <tr>
+          {{#if @root.showField_contractorName}}
+          <td>{{contractorName}}</td>
+          {{/if}}
+          {{#if @root.showField_jobPosition}}
+          <td>{{jobPosition}}</td>
+          {{/if}}
+          {{#if @root.showField_clientName}}
+          <td>{{clientName}}</td>
+          {{/if}}
+          {{#if @root.showField_teamName}}
+          <td>{{teamName}}</td>
+          {{/if}}
+          {{#if @root.showField_country}}
+          <td>{{country}}</td>
+          {{/if}}
+          {{#if @root.showField_timeWorked}}
+          <td style="font-weight: 600;">{{timeWorked}}</td>
+          {{/if}}
+          {{#if @root.showField_activityPercentage}}
+          <td class="{{activityClass activityPercentage}}">{{activityPercentage}}%</td>
+          {{/if}}
+          {{#if @root.showField_productivityScore}}
+          <td>{{productivityScore}}</td>
+          {{/if}}
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    {{else}}
+    <p style="text-align: center; color: #64748B; padding: 24px;">No activity data available</p>
+    {{/if}}
+  </div>
+
+  <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E2E8F0; text-align: center; color: #64748B; font-size: 11px;">
+    Generated on {{generatedAt}} | Environment: {{summary.environment}}
+  </div>
+</body>
+</html>
