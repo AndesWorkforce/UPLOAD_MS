@@ -49,12 +49,29 @@ export class TemplateService implements OnModuleInit {
    * Carga templates desde archivos
    */
   private loadTemplates(): void {
-    const templatePath = join(
-      __dirname,
-      '..',
-      'templates',
-      'productivity-report.hbs',
-    );
+    // En desarrollo, leer desde src; en producción desde dist
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    let templatePath: string;
+
+    if (isDevelopment) {
+      // En desarrollo: leer desde src/reports/templates/
+      templatePath = join(
+        process.cwd(),
+        'src',
+        'reports',
+        'templates',
+        'productivity-report.hbs',
+      );
+    } else {
+      // En producción: leer desde dist/src/reports/templates/
+      templatePath = join(
+        __dirname,
+        '..',
+        'templates',
+        'productivity-report.hbs',
+      );
+    }
+
     const templateContent = readFileSync(templatePath, 'utf-8');
     this.productivityTemplate = handlebars.compile(templateContent);
   }
