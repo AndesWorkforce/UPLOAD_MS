@@ -50,6 +50,8 @@ export interface AdtUserMetric {
   country?: string;
   time_worked?: string;
   timeWorked?: string;
+  // ADT devuelve active_percentage, no activity_percentage
+  active_percentage?: number;
   activity_percentage?: number;
   activityPercentage?: number;
   productivity_score?: number;
@@ -68,6 +70,8 @@ export interface AdtUserMetric {
   avgKeyboardPerMin?: number;
   avg_mouse_per_min?: number;
   avgMousePerMin?: number;
+  // ADT devuelve esto como número (segundos), no como string HH:MM:SS
+  total_session_time_seconds?: number;
   effective_work_seconds?: number;
   effectiveWorkSeconds?: number;
 }
@@ -87,4 +91,10 @@ export interface NormalizedUserActivity {
   timeWorked: string;
   activityPercentage: number;
   productivityScore: number;
+  totalKeyboardInputs?: number;
+  totalMouseClicks?: number;
+  totalActiveBeats?: number;
+  totalIdleBeats?: number;
+  effectiveWorkSeconds?: number; // Tiempo activo en segundos
+  totalSessionSeconds?: number; // Tiempo total de sesión en segundos
 }

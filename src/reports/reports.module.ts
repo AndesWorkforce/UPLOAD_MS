@@ -5,7 +5,11 @@ import { ReportsService } from './reports.service';
 import { S3Module } from '../s3/s3.module';
 import { ReportDateValidator } from './validators/report-date.validator';
 import { AdtMetricsMapper } from './mappers/adt-metrics.mapper';
-import { ReportDataBuilder } from './builders/report-data.builder';
+import {
+  ReportDataBuilder,
+  IndividualReportBuilder,
+  GroupReportBuilder,
+} from './builders';
 import { TemplateService } from './templates/template.service';
 import { ReportPdfService } from './pdf/report-pdf.service';
 
@@ -17,6 +21,8 @@ import { ReportPdfService } from './pdf/report-pdf.service';
     ReportDateValidator,
     AdtMetricsMapper,
     ReportDataBuilder,
+    IndividualReportBuilder,
+    GroupReportBuilder,
     TemplateService,
     ReportPdfService,
   ],
