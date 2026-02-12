@@ -187,27 +187,37 @@ export class GroupReportBuilder extends ReportDataBuilder {
   private calculateDistribution(
     contractors: NormalizedUserActivity[],
   ): GroupDistribution {
-    const activityHigh = contractors.filter(
-      (c) => c.activityPercentage >= 80,
-    ).length;
-    const activityMedium = contractors.filter(
-      (c) => c.activityPercentage >= 50 && c.activityPercentage < 80,
-    ).length;
-    const activityLow = contractors.filter((c) => c.activityPercentage < 50)
-      .length;
+    // Inicializar contadores
+    let activityHigh = 0;
+    let activityMedium = 0;
+    let activityLow = 0;
+    let prodExcellent = 0;
+    let prodGood = 0;
+    let prodAverage = 0;
+    let prodNeedsImprovement = 0;
 
-    const prodExcellent = contractors.filter(
-      (c) => c.productivityScore >= 85,
-    ).length;
-    const prodGood = contractors.filter(
-      (c) => c.productivityScore >= 70 && c.productivityScore < 85,
-    ).length;
-    const prodAverage = contractors.filter(
-      (c) => c.productivityScore >= 50 && c.productivityScore < 70,
-    ).length;
-    const prodNeedsImprovement = contractors.filter(
-      (c) => c.productivityScore < 50,
-    ).length;
+    // Un solo recorrido para clasificar todos los contractors
+    for (const contractor of contractors) {
+      // Clasificar por actividad
+      if (contractor.activityPercentage >= 80) {
+        activityHigh++;
+      } else if (contractor.activityPercentage >= 50) {
+        activityMedium++;
+      } else {
+        activityLow++;
+      }
+
+      // Clasificar por productividad
+      if (contractor.productivityScore >= 85) {
+        prodExcellent++;
+      } else if (contractor.productivityScore >= 70) {
+        prodGood++;
+      } else if (contractor.productivityScore >= 50) {
+        prodAverage++;
+      } else {
+        prodNeedsImprovement++;
+      }
+    }
 
     return {
       activityDistribution: {
