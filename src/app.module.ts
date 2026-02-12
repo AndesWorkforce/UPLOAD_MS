@@ -1,12 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import envs from '../config/envs';
-import { AuthGuard } from './guards/auth.guard';
-import { RolesGuard } from './guards/roles.guard';
 import { NatsModule } from './nats/nats.module';
 import { S3Module } from './s3/s3.module';
 import { ReportsModule } from './reports/reports.module';
@@ -21,10 +16,10 @@ import { ReportsModule } from './reports/reports.module';
     S3Module,
     ReportsModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
-    // TODO: Configurar AUTH_SERVICE para usar los guards
+    // TODO: Configurar AUTH_SERVICE para usar los guards globales
+    // Cuando se habilite autenticación, descomentar:
     // {
     //   provide: APP_GUARD,
     //   useClass: AuthGuard,

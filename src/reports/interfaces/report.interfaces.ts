@@ -14,6 +14,12 @@ export interface UserActivityReport {
   timeWorked: string;
   activityPercentage: number;
   productivityScore: number;
+  totalKeyboardInputs?: number;
+  totalMouseClicks?: number;
+  totalActiveBeats?: number;
+  totalIdleBeats?: number;
+  effectiveWorkSeconds?: number;
+  totalSessionSeconds?: number;
 }
 
 export interface ReportSummary {
@@ -41,11 +47,65 @@ export interface ReportSummary {
     name: string;
     activityPercentage: number;
   };
+  // Session & Connectivity metrics
+  totalClients?: number;
+  totalTeams?: number;
+  totalSessions?: number;
 }
 
 export interface ReportData {
   summary: ReportSummary;
   items: UserActivityReport[];
+  chartData?: GroupedChartData[];
+}
+
+/**
+ * Datos agrupados para el gráfico de Session & Connectivity
+ */
+export interface GroupedChartData {
+  label: string; // Nombre del cliente o equipo
+  duration: number; // Duración en horas (decimal)
+}
+
+/**
+ * Datos de aplicaciones más usadas
+ */
+export interface AppUsage {
+  appName: string;
+  seconds: number;
+  type?: string;
+  percentage?: number;
+}
+
+/**
+ * Datos de sitios web más visitados
+ */
+export interface BrowserUsage {
+  domain: string;
+  seconds: number;
+  percentage?: number;
+}
+
+/**
+ * Datos de actividad por hora para gráficos
+ */
+export interface HourlyChartData {
+  hour: string; // "08:00", "09:00", etc.
+  duration: number; // Horas (decimal)
+  productivity: number; // 0-100
+}
+
+/**
+ * Datos de sesiones de un contractor
+ */
+export interface ContractorSession {
+  session_id: string;
+  session_start: string;
+  session_end: string;
+  total_seconds: number;
+  active_seconds: number;
+  idle_seconds: number;
+  productivity_score:number;
 }
 
 /**

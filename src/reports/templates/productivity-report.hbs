@@ -2,143 +2,373 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Productivity Report</title>
+  <title>Group Productivity Report</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
       font-family: Arial, sans-serif; 
-      padding: 20px; 
+      padding: 32px; 
       color: #000000;
       background: #FFFFFF;
     }
+
+    /* Header */
     .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       margin-bottom: 24px;
-      border-bottom: 2px solid #0097B2;
       padding-bottom: 16px;
+      border-bottom: 2px solid #0097B2;
     }
-    h1 { 
-      font-size: 28px;
-      margin-bottom: 8px;
+    .header h1 { 
+      font-size: 24px;
+      font-weight: 600;
       color: #000000;
     }
-    .subtitle { 
-      font-size: 16px;
-      color: #475569;
-      margin-bottom: 8px;
+    .period-info {
+      font-size: 14px;
+      color: #6D6D6D;
+      margin-top: 4px;
     }
-    .info-pills {
+
+    /* Filters Section */
+    .filters-section {
+      background: #F8FAFC;
+      border: 1px solid rgba(166,166,166,0.5);
+      border-radius: 5px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .filters-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #000000;
+      margin-bottom: 10px;
+    }
+    .filters-content {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      margin-top: 12px;
-    }
-    .pill { 
-      display: inline-block;
-      padding: 4px 12px;
-      background: #E2E8F0;
-      border-radius: 16px;
       font-size: 12px;
+      color: #6D6D6D;
+    }
+    .filter-tag {
+      background: #FFFFFF;
+      border: 1px solid rgba(166,166,166,0.3);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    .filter-tag strong {
+      color: #0097B2;
       font-weight: 600;
     }
-    .section {
-      margin-bottom: 24px;
-    }
-    .section-title {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 12px;
-      color: #000000;
-    }
-    .filters-row {
+
+    /* Summary Metrics Cards */
+    .metrics-summary {
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      padding: 12px;
-      background: #F8FAFC;
-      border-radius: 8px;
-    }
-    .filter-item {
-      font-size: 13px;
-    }
-    .filter-item strong {
-      color: #0097B2;
-    }
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 10px;
+      margin-bottom: 20px;
     }
     .metric-card {
-      background: #F8FAFC;
-      border: 1px solid #E2E8F0;
-      border-radius: 8px;
-      padding: 12px;
-      text-align: center;
+      flex: 1;
+      background: #FFFFFF;
+      border: 1px solid rgba(166,166,166,0.5);
+      border-radius: 5px;
+      padding: 17px;
+      min-height: 90px;
     }
-    .metric-label {
-      font-size: 11px;
-      color: #64748B;
-      margin-bottom: 4px;
-      font-weight: 600;
-      text-transform: uppercase;
+    .metric-card .label {
+      font-size: 12px;
+      color: #6D6D6D;
+      font-weight: 400;
+      margin-bottom: 8px;
+      display: block;
     }
-    .metric-value {
+    .metric-card .value {
       font-size: 20px;
-      font-weight: bold;
+      font-weight: 600;
       color: #0097B2;
     }
-    .performers-section {
-      display: flex;
-      gap: 24px;
-      padding: 12px;
-      background: #F8FAFC;
-      border-radius: 8px;
-      margin-bottom: 16px;
+
+    /* Inputs Section */
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
     }
-    .performer {
-      flex: 1;
+    .input-card {
+      background: #FFFFFF;
+      border: 1px solid rgba(166,166,166,0.25);
+      border-radius: 5px;
+      padding: 10px;
       display: flex;
-      gap: 8px;
       align-items: center;
+      gap: 10px;
+      height: 63px;
     }
-    .performer-label {
-      font-size: 13px;
+    .input-card .icon {
+      font-size: 30px;
+    }
+    .input-card .info {
+      flex: 1;
+    }
+    .input-card .info .label {
+      font-size: 12px;
+      font-weight: 300;
+      color: #000000;
+      margin-bottom: 4px;
+    }
+    .input-card .info .value {
+      font-size: 20px;
       font-weight: 600;
+      color: #000000;
     }
-    .performer-name {
-      font-size: 13px;
-      font-weight: bold;
+
+    /* Performers Section */
+    .performers-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
     }
-    .performer-value {
+    .performer-card {
+      background: #FFFFFF;
+      border: 1px solid rgba(166,166,166,0.5);
+      border-radius: 5px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 68px;
+    }
+    .performer-card .icon {
+      font-size: 30px;
+    }
+    .performer-card.most-active .icon { color: #0097B2; }
+    .performer-card.least-active .icon { color: #FF0004; }
+    .performer-card .info {
+      flex: 1;
+    }
+    .performer-card .info .label {
+      font-size: 9px;
+      font-weight: 300;
+      margin-bottom: 4px;
+    }
+    .performer-card.most-active .info .label { color: #0097B2; }
+    .performer-card.least-active .info .label { color: #FF0004; }
+    .performer-card .info .name {
+      font-size: 11px;
+      font-weight: 600;
+      color: #000000;
+      margin-bottom: 2px;
+    }
+    .performer-card .badge {
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-size: 9px;
+      font-weight: 500;
+    }
+    .performer-card.most-active .badge {
+      background: rgba(51,211,117,0.5);
+      color: #166534;
+    }
+    .performer-card.least-active .badge {
+      background: rgba(255,0,4,0.25);
+      color: #FF0004;
+    }
+
+    /* Time Breakdown */
+    .time-breakdown {
+      background: #FFFFFF;
+      border: 1px solid rgba(166,166,166,0.5);
+      border-radius: 5px;
+      padding: 20px 28px;
+      margin-bottom: 20px;
+    }
+    .time-breakdown .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #000000;
+      margin-bottom: 15px;
+    }
+    .time-breakdown .stats {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+    }
+    .time-breakdown .stat {
+      flex: 1;
+      text-align: center;
+    }
+    .time-breakdown .stat .value {
+      font-size: 20px;
+      font-weight: 600;
+      color: #000000;
+      margin-bottom: 4px;
+    }
+    .time-breakdown .stat .label {
+      font-size: 12px;
+      font-weight: 300;
+      color: #000000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .time-breakdown .stat .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .time-breakdown .stat.active .dot { background: #0097B2; }
+    .time-breakdown .stat.idle .dot { background: #FF0004; }
+
+    /* Session & Connectivity Section */
+    .session-connectivity {
+      background: #FFFFFF;
+      border: 1px solid rgba(166,166,166,0.5);
+      border-radius: 5px;
+      padding: 20px 28px;
+      margin-bottom: 20px;
+    }
+    .session-connectivity .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #000000;
+      margin-bottom: 10px;
+    }
+    .session-connectivity-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .connectivity-card {
+      background: #FFFFFF;
+      border: 1px solid rgba(166,166,166,0.25);
+      border-radius: 5px;
+      padding: 10px;
+      min-height: 63px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .connectivity-card .label {
+      font-size: 12px;
+      font-weight: 300;
+      color: #000000;
+      margin-bottom: 4px;
+    }
+    .connectivity-card .value {
+      font-size: 20px;
+      font-weight: 600;
+      color: #0097B2;
+    }
+    .chart-container {
+      position: relative;
+      height: 280px;
+      width: 100%;
+    }
+
+    /* Session Summary */
+    .session-summary {
+      background: #FFFFFF;
+      border: 1px solid rgba(166,166,166,0.5);
+      border-radius: 5px;
+      padding: 20px 28px;
+      margin-bottom: 20px;
+    }
+    .session-summary .title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #000000;
+      margin-bottom: 8px;
+    }
+    .session-summary .subtitle {
       font-size: 14px;
-      font-weight: bold;
-      margin-left: auto;
+      font-weight: 300;
+      color: #6D6D6D;
+      margin-bottom: 15px;
     }
+    .session-summary .group-container {
+      margin-bottom: 30px;
+    }
+    .session-summary .group-container:last-child {
+      margin-bottom: 0;
+    }
+    .session-summary .group-header {
+      font-size: 16px;
+      font-weight: 500;
+      color: #0097B2;
+      margin-bottom: 12px;
+    }
+    .session-summary .group-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 15px;
+      padding: 16px;
+      background: #FFFFFF;
+      border: 1px solid rgba(166,166,166,0.5);
+      border-radius: 5px;
+    }
+    .session-summary .summary-metric {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .session-summary .summary-metric .icon-box {
+      width: 40px;
+      height: 40px;
+      background: #E0F2FE;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .session-summary .summary-metric .metric-info {
+      flex: 1;
+    }
+    .session-summary .summary-metric .metric-label {
+      font-size: 12px;
+      color: #6D6D6D;
+      margin-bottom: 2px;
+    }
+    .session-summary .summary-metric .metric-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: #0097B2;
+    }
+
+    /* Table */
     table { 
       width: 100%;
       border-collapse: collapse;
-      font-size: 11px;
-      background: #FFFFFF;
+      border: 1px solid rgba(166,166,166,0.5);
+      border-radius: 10px;
+      overflow: hidden;
     }
     thead {
       background: #F8FAFC;
-      position: sticky;
-      top: 0;
     }
     th { 
-      border: 1px solid #E2E8F0;
-      padding: 8px 6px;
+      padding: 12px 8px;
       text-align: center;
       font-weight: 600;
       color: #000000;
       font-size: 11px;
+      border-bottom: 1px solid rgba(166,166,166,0.3);
     }
     td { 
-      border: 1px solid #E2E8F0;
-      padding: 8px 6px;
+      padding: 12px 8px;
       text-align: center;
-      font-size: 10px;
+      font-size: 11px;
+      color: #000000;
+      border-bottom: 1px solid rgba(166,166,166,0.3);
     }
     tbody tr:nth-child(even) {
       background: #E2E2E2;
@@ -146,19 +376,36 @@
     tbody tr:nth-child(odd) {
       background: #FFFFFF;
     }
-    .activity-high {
-      color: #2EC36D;
-      font-weight: bold;
+    tbody tr:last-child td {
+      border-bottom: none;
     }
-    .activity-low {
-      color: #FF0004;
-      font-weight: bold;
+
+    /* Productivity Colors */
+    .productivity-high { 
+      color: #0097B2; 
+      font-weight: 700;
     }
-    .page-break {
-      page-break-after: always;
+    .productivity-medium { 
+      color: #FF9800; 
+      font-weight: 700;
     }
+    .productivity-low { 
+      color: #FF0004; 
+      font-weight: 700;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid #E2E8F0;
+      text-align: center;
+      color: #64748B;
+      font-size: 10px;
+    }
+
     @media print {
-      body { padding: 10px; }
+      body { padding: 16px; }
       .header { page-break-after: avoid; }
       table { page-break-inside: auto; }
       tr { page-break-inside: avoid; page-break-after: auto; }
@@ -166,152 +413,287 @@
   </style>
 </head>
 <body>
+  <!-- Header -->
   <div class="header">
-    <h1>📊 Productivity Report</h1>
-    <div class="subtitle">Period: {{periodStart}} - {{periodEnd}}</div>
-    <div class="info-pills">
-      <span class="pill">📈 Metrics: {{summary.metricsCount}}</span>
-      <span class="pill">🌍 Env: {{summary.environment}}</span>
-      <span class="pill">🔌 Source: {{summary.source}}</span>
+    <div>
+      <h1>Preview Report</h1>
+      <div class="period-info">{{periodStart}} - {{periodEnd}}</div>
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">🔍 Filters Applied</div>
-    <div class="filters-row">
+  <!-- Filters Applied -->
+  <div class="filters-section">
+    <div class="filters-title">Filters Applied</div>
+    <div class="filters-content">
       {{#if hasFilters}}
         {{#each filters}}
-          <span class="filter-item"><strong>{{@key}}:</strong> {{this}}</span>
+          <span class="filter-tag"><strong>{{label}}:</strong> {{value}}</span>
         {{/each}}
       {{else}}
-        <em>No filters applied</em>
+        <span style="color: #6D6D6D; font-style: italic;">No filters applied - Showing all data</span>
       {{/if}}
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">📊 Summary Metrics</div>
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <div class="metric-label">Total Users</div>
-        <div class="metric-value">{{summary.totalUsers}}</div>
+  <!-- Session & Connectivity -->
+  {{#if hasChartData}}
+  <div class="session-connectivity">
+    <h3 class="title">Session & Connectivity</h3>
+    <div class="session-connectivity-cards">
+      <div class="connectivity-card">
+        <p class="label">Total Clients</p>
+        <p class="value">{{summary.totalClients}}</p>
       </div>
-      <div class="metric-card">
-        <div class="metric-label">Total Time Worked</div>
-        <div class="metric-value">{{summary.totalTimeWorked}}</div>
+      <div class="connectivity-card">
+        <p class="label">Total Teams</p>
+        <p class="value">{{summary.totalTeams}}</p>
       </div>
-      <div class="metric-card">
-        <div class="metric-label">Average Activity</div>
-        <div class="metric-value">{{summary.averageActivity}}%</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Average Productivity</div>
-        <div class="metric-value">{{summary.averageProductivity}}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Total Active Beats</div>
-        <div class="metric-value">{{formatNumber summary.totalActiveBeats}}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Total Idle Beats</div>
-        <div class="metric-value">{{formatNumber summary.totalIdleBeats}}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Total Keyboard Inputs</div>
-        <div class="metric-value">{{formatNumber summary.totalKeyboardInputs}}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Total Mouse Clicks</div>
-        <div class="metric-value">{{formatNumber summary.totalMouseClicks}}</div>
+      <div class="connectivity-card">
+        <p class="label">Total Session Count</p>
+        <p class="value">{{summary.totalSessions}}</p>
       </div>
     </div>
+    <div class="chart-container">
+      <canvas id="durationChart"></canvas>
+    </div>
+  </div>
+  {{/if}}
 
-    {{#if hasPerformers}}
-    <div class="performers-section">
-      <div class="performer">
-        <span class="performer-label">🏆 Most Active:</span>
-        <span class="performer-name">{{summary.mostActiveUser.name}}</span>
-        <span class="performer-value" style="color: #2EC36D;">{{summary.mostActiveUser.activityPercentage}}%</span>
-      </div>
-      <div class="performer">
-        <span class="performer-label">📊 Least Active:</span>
-        <span class="performer-name">{{summary.leastActiveUser.name}}</span>
-        <span class="performer-value" style="color: #FF0004;">{{summary.leastActiveUser.activityPercentage}}%</span>
-      </div>
+  <!-- Summary Metrics -->
+  <div class="metrics-summary">
+    <div class="metric-card">
+      <span class="label">Total Contractors</span>
+      <div class="value">{{summary.totalUsers}}</div>
     </div>
-    {{/if}}
+    <div class="metric-card">
+      <span class="label">Avg Duration (Hours)</span>
+      <div class="value">{{avgDuration}}</div>
+    </div>
+    <div class="metric-card">
+      <span class="label">Avg Productivity (%)</span>
+      <div class="value">{{formatPercentage summary.averageProductivity}}%</div>
+    </div>
   </div>
 
-  <div class="section">
-    <div class="section-title">👥 Activity Details ({{items.length}} users)</div>
-    {{#if items.length}}
-    <table>
-      <thead>
-        <tr>
-          {{#if showField_contractorName}}
-          <th>User</th>
-          {{/if}}
-          {{#if showField_jobPosition}}
-          <th>Job Position</th>
-          {{/if}}
-          {{#if showField_clientName}}
-          <th>Client</th>
-          {{/if}}
-          {{#if showField_teamName}}
-          <th>Team</th>
-          {{/if}}
-          {{#if showField_country}}
-          <th>Country</th>
-          {{/if}}
-          {{#if showField_timeWorked}}
-          <th>Time</th>
-          {{/if}}
-          {{#if showField_activityPercentage}}
-          <th>Activity</th>
-          {{/if}}
-          {{#if showField_productivityScore}}
-          <th>Productivity</th>
-          {{/if}}
-        </tr>
-      </thead>
-      <tbody>
-        {{#each items}}
-        <tr>
-          {{#if @root.showField_contractorName}}
-          <td>{{contractorName}}</td>
-          {{/if}}
-          {{#if @root.showField_jobPosition}}
-          <td>{{jobPosition}}</td>
-          {{/if}}
-          {{#if @root.showField_clientName}}
-          <td>{{clientName}}</td>
-          {{/if}}
-          {{#if @root.showField_teamName}}
-          <td>{{teamName}}</td>
-          {{/if}}
-          {{#if @root.showField_country}}
-          <td>{{country}}</td>
-          {{/if}}
-          {{#if @root.showField_timeWorked}}
-          <td style="font-weight: 600;">{{timeWorked}}</td>
-          {{/if}}
-          {{#if @root.showField_activityPercentage}}
-          <td class="{{activityClass activityPercentage}}">{{activityPercentage}}%</td>
-          {{/if}}
-          {{#if @root.showField_productivityScore}}
-          <td>{{productivityScore}}</td>
-          {{/if}}
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>
+  <!-- Keyboard & Mouse Inputs -->
+  <div class="inputs-grid">
+    <div class="input-card">
+      <div class="icon">⌨️</div>
+      <div class="info">
+        <div class="label">Total Keyboard Inputs</div>
+        <div class="value">{{formatNumber summary.totalKeyboardInputs}}</div>
+      </div>
+    </div>
+    <div class="input-card">
+      <div class="icon">🖱️</div>
+      <div class="info">
+        <div class="label">Total Mouse Inputs</div>
+        <div class="value">{{formatNumber summary.totalMouseClicks}}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Most Active & Least Active -->
+  {{#if hasPerformers}}
+  <div class="performers-grid">
+    <div class="performer-card most-active">
+      <div class="icon">📈</div>
+      <div class="info">
+        <div class="label">MOST ACTIVE CONTRACTOR</div>
+        <div class="name">{{summary.mostActiveUser.name}}</div>
+        <span class="badge">{{formatPercentage summary.mostActiveUser.activityPercentage}}%</span>
+      </div>
+    </div>
+    <div class="performer-card least-active">
+      <div class="icon">📉</div>
+      <div class="info">
+        <div class="label">LEAST ACTIVE CONTRACTOR</div>
+        <div class="name">{{summary.leastActiveUser.name}}</div>
+        <span class="badge">{{formatPercentage summary.leastActiveUser.activityPercentage}}%</span>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+
+  <!-- Time Breakdown -->
+  <div class="time-breakdown">
+    <div class="title">Time Breakdown</div>
+    <div class="stats">
+      <div class="stat">
+        <div class="value">{{summary.totalTimeWorked}}</div>
+        <div class="label">Total Time Worked</div>
+      </div>
+      <div class="stat active">
+        <div class="value">{{avgActiveTime}}</div>
+        <div class="label">
+          <span class="dot"></span>
+          Average Activity
+        </div>
+      </div>
+      <div class="stat idle">
+        <div class="value">{{avgIdleTime}}</div>
+        <div class="label">
+          <span class="dot"></span>
+          Average Idle
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session Summary -->
+  <div class="session-summary">
+    <div class="title">Session Summary</div>
+    <div class="subtitle">{{periodStart}}</div>
+
+    {{#if groupedData.length}}
+      {{#each groupedData}}
+      <div class="group-container">
+        <!-- Header del grupo -->
+        <div class="group-header">Client {{clientName}} | Team {{teamName}}</div>
+
+        <!-- Tabla de contractors -->
+        <table>
+          <thead>
+            <tr>
+              <th>Contractor</th>
+              <th>Job Position</th>
+              <th>Country</th>
+              <th>Working Time</th>
+              <th>Average Active</th>
+              <th>Productivity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each contractors}}
+            <tr>
+              <td style="font-weight: 600;">{{contractorName}}</td>
+              <td>{{jobPosition}}</td>
+              <td>{{country}}</td>
+              <td style="font-weight: 600;">{{timeWorked}}</td>
+              <td>{{avgActive}}</td>
+              <td class="{{productivityClass productivityScore}}">{{formatPercentage productivityScore}}%</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+
+        <!-- Summary del grupo -->
+        <div class="group-summary">
+          <div class="summary-metric">
+            <div class="icon-box">📋</div>
+            <div class="metric-info">
+              <div class="metric-label">Total Contractors</div>
+              <div class="metric-value">{{summary.totalContractors}}</div>
+            </div>
+          </div>
+          <div class="summary-metric">
+            <div class="icon-box">⏳</div>
+            <div class="metric-info">
+              <div class="metric-label">Total Avg Duration</div>
+              <div class="metric-value">{{summary.avgDuration}}</div>
+            </div>
+          </div>
+          <div class="summary-metric">
+            <div class="icon-box">🎯</div>
+            <div class="metric-info">
+              <div class="metric-label">Total Avg Productivity</div>
+              <div class="metric-value">{{summary.avgProductivity}}%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/each}}
     {{else}}
     <p style="text-align: center; color: #64748B; padding: 24px;">No activity data available</p>
     {{/if}}
   </div>
 
-  <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E2E8F0; text-align: center; color: #64748B; font-size: 11px;">
-    Generated on {{generatedAt}} | Environment: {{summary.environment}}
+  <!-- Footer -->
+  <div class="footer">
+    Generated on {{generatedAt}} | Environment: {{summary.environment}} | Source: {{summary.source}}
   </div>
+
+  {{#if hasChartData}}
+  <script>
+    // Initialize Chart.js for Session & Connectivity
+    document.addEventListener('DOMContentLoaded', function() {
+      const ctx = document.getElementById('durationChart');
+      if (ctx) {
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: {{{chartLabels}}},
+            datasets: [{
+              label: 'Avg. Duration',
+              data: {{{chartValues}}},
+              borderColor: '#0097B2',
+              backgroundColor: 'rgba(0, 151, 178, 0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.1,
+              pointRadius: 4,
+              pointBackgroundColor: '#0097B2'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Duration (h)',
+                  color: '#000000',
+                  font: { size: 12 }
+                },
+                ticks: {
+                  callback: function(value) {
+                    return value + 'h';
+                  },
+                  color: '#000000',
+                  font: { size: 10 }
+                },
+                grid: {
+                  color: '#F0F0F0'
+                }
+              },
+              x: {
+                ticks: {
+                  color: '#000000',
+                  font: { size: 9 }
+                },
+                grid: {
+                  display: false
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                  color: '#000000',
+                  font: { size: 11 },
+                  usePointStyle: true,
+                  pointStyle: 'rect'
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const hours = Math.floor(context.parsed.y);
+                    const minutes = Math.round((context.parsed.y - hours) * 60);
+                    return context.dataset.label + ': ' + hours + 'h ' + minutes + 'm';
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    });
+  </script>
+  {{/if}}
 </body>
 </html>
