@@ -1,0 +1,84 @@
+# docker-compose.yml — Local development & validation only
+# For production use a Kubernetes deployment manifest.
+#
+# Usage:
+#   1. Copy .env.template to .env and fill in your values
+#   2. docker compose up --build
+
+services:
+  # ─── NATS message broker ────────────────────────────────────────────────────
+  nats:
+    image: nats:2.10-alpine
+    container_name: andes-upload-nats
+    restart: unless-stopped
+    command:
+      - "--user"
+      - "${NATS_USERNAME:-andes_nats}"
+      - "--pass"
+      - "${NATS_PASSWORD:-andesworkforce_nats}"
+      - "--port"
+      - "4222"
+      - "-m"
+      - "8222" # enable HTTP monitoring endpoint
+    ports:
+      - "4222:4222" # client connections
+      - "8222:8222" # HTTP monitoring (optional)
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Upload Microservice ──────────────────────────────────────────────────────
+  upload-ms:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        PORT: ${PORT:-3006}
+        ADT_MS_URL: ${ADT_MS_URL}
+        AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+        AWS_REGION: ${AWS_REGION}
+        AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+        AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+        DEV_LOGS: ${DEV_LOGS:-true}
+        ENVIRONMENT: ${ENVIRONMENT:-production}
+        JWT_SECRET_PASSWORD: ${JWT_SECRET_PASSWORD}
+        NATS_HOST: ${NATS_HOST}
+        NATS_PORT: ${NATS_PORT:-4222}
+        NATS_USERNAME: ${NATS_USERNAME}
+        NATS_PASSWORD: ${NATS_PASSWORD}
+    container_name: andes-upload-ms
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3006}:${PORT:-3006}"
+    env_file:
+      - .env
+    environment:
+      PORT: ${PORT:-3006}
+      ADT_MS_URL: ${ADT_MS_URL}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_REGION: ${AWS_REGION}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      DEV_LOGS: ${DEV_LOGS:-true}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      JWT_SECRET_PASSWORD: ${JWT_SECRET_PASSWORD}
+      NATS_HOST: ${NATS_HOST}
+      NATS_PORT: ${NATS_PORT:-4222}
+      NATS_USERNAME: ${NATS_USERNAME}
+      NATS_PASSWORD: ${NATS_PASSWORD}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://localhost:${PORT:-3006}/health",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
