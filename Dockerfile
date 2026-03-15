@@ -11,6 +11,9 @@ RUN apk add --no-cache dumb-init
 
 COPY package.json ./
 
+# Skip Puppeteer's internal Chrome download (we'll use system Chromium)
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 # Install ALL deps (devDeps needed for tsc / @nestjs/cli)
 # --ignore-scripts skips the "prepare" husky hook
 RUN npm install --ignore-scripts
@@ -33,6 +36,19 @@ RUN npm prune --omit=dev --ignore-scripts
 FROM node:20-alpine AS production
 
 WORKDIR /app
+
+# Install Chromium and required libs for Puppeteer
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Tell Puppeteer to use the system Chromium instead of downloading its own
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Binary is already built into Alpine's node image; pull dumb-init from builder
 COPY --from=builder /usr/bin/dumb-init /usr/bin/dumb-init
