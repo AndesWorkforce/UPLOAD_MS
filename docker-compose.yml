@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  upload-ms:
+    image: ghcr.io/andesworkforce/upload_ms:latest
+    networks:
+      - traefik-public              # <-- Nombre exacto de la captura
+      - nats_nats_internal_network  # <-- Nombre exacto de la captura
+      - default
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+    environment:
+      NODE_ENV: production
+      PORT: "${PORT:-3004}"
+
+      # NATS
+      NATS_HOST: "${NATS_HOST:-72.61.129.234}"
+      NATS_PORT: "${NATS_PORT:-4222}"
+      NATS_USERNAME: "${NATS_USERNAME:-andes_nats}"
+      NATS_PASSWORD: "${NATS_PASSWORD:-andesworkforce_nats}"
+      DEV_LOGS: "${DEV_LOGS:-true}"
+      ENVIRONMENT: "${ENVIRONMENT:-development}"
+
+networks:
+  default:
+    name: andes-user-ms-net
+    driver: overlay
+
+  traefik-public:
+    external: true
+
+  nats_nats_internal_network:
+    external: true

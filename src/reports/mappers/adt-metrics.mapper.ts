@@ -46,6 +46,11 @@ export class AdtMetricsMapper {
    * Normaliza un usuario individual a formato interno
    */
   normalizeUserMetric(metric: AdtUserMetric): NormalizedUserActivity {
+    // ADT devuelve total_session_time_seconds como número, necesitamos convertirlo a HH:MM:SS
+    const totalSessionSeconds = (metric as any).total_session_time_seconds || 0;
+    const effectiveWorkSeconds = metric.effective_work_seconds || metric.effectiveWorkSeconds || 0;
+    const timeWorked = this.formatSecondsToTime(totalSessionSeconds);
+
     return {
       contractorId:
         metric.contractorId || metric.contractor_id || 'N/A',
@@ -60,11 +65,35 @@ export class AdtMetricsMapper {
       teamId: metric.teamId || metric.team_id || 'N/A',
       teamName: metric.teamName || metric.team_name || 'N/A',
       country: metric.country || 'N/A',
-      timeWorked: metric.timeWorked || metric.time_worked || '00:00:00',
+      timeWorked,
+      // ADT devuelve active_percentage, no activity_percentage
       activityPercentage:
-        metric.activityPercentage ?? metric.activity_percentage ?? 0,
+        metric.activityPercentage ??
+        metric.activity_percentage ??
+        (metric as any).active_percentage ??
+        0,
       productivityScore:
         metric.productivityScore ?? metric.productivity_score ?? 0,
+      totalKeyboardInputs:
+        metric.totalKeyboardInputs ??
+        metric.total_keyboard_inputs ??
+        0,
+      totalMouseClicks:
+        metric.totalMouseClicks ??
+        metric.total_mouse_clicks ??
+        0,
+      totalActiveBeats:
+        metric.totalBeats ??
+        metric.total_beats ??
+        metric.activeBeats ??
+        metric.active_beats ??
+        0,
+      totalIdleBeats:
+        metric.idleBeats ??
+        metric.idle_beats ??
+        0,
+      effectiveWorkSeconds,
+      totalSessionSeconds,
     };
   }
 
@@ -102,6 +131,21 @@ export class AdtMetricsMapper {
           })
         : undefined,
     };
+  }
+
+  /**
+   * Convierte segundos a formato HH:MM:SS
+   */
+  private formatSecondsToTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    return [
+      hours.toString().padStart(2, '0'),
+      minutes.toString().padStart(2, '0'),
+      secs.toString().padStart(2, '0'),
+    ].join(':');
   }
 
   /**
