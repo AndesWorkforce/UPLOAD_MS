@@ -21,7 +21,7 @@ interface EnvVars {
 }
 
 export const envSchema = Joi.object({
-  AWS_REGION: Joi.string().required().default('us-east-2'),
+  AWS_REGION: Joi.string().default('us-east-2'),
   AWS_S3_BUCKET: Joi.string().required(),
   AWS_ACCESS_KEY_ID: Joi.string().required(),
   AWS_SECRET_ACCESS_KEY: Joi.string().required(),
