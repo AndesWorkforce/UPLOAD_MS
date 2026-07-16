@@ -107,24 +107,22 @@ export class ReportsService {
     const reportData = this.individualBuilder.buildIndividualReport(
       adtMetrics,
       metadata,
+      rawMetrics,
     );
 
-    // 4. Agregar datos adicionales
-    reportData.hourlyData = hourlyDurationData.map((h: any) => ({
-      hour: h.hour_label,
-      duration: Math.round((h.avg_duration_seconds / 3600) * 100) / 100,
-      productivity: 0, // Se agregará con hourlyProductivityData
-    }));
+    // 4. Agregar datos adicionales (mismo criterio que ReportDetailView: 00:00–23:00)
+    const CHART_START_HOUR = 0;
+    const CHART_END_HOUR = 23;
 
-    // Combinar con productividad
-    hourlyProductivityData.forEach((hp: any) => {
-      const hourData = reportData.hourlyData?.find((h) => h.hour === hp.hour_label);
-      if (hourData) {
-        hourData.productivity = Math.round(hp.avg_productivity_score);
-      }
-    });
+    reportData.hourlyData = this.buildHourlyChartData(
+      hourlyDurationData,
+      hourlyProductivityData,
+      CHART_START_HOUR,
+      CHART_END_HOUR,
+    );
 
     reportData.sessionsByDay = sessionsData;
+    reportData.sessionConnectivity = this.buildSessionConnectivityStats(sessionsData);
 
     // 5. Generar HTML desde template individual
     const html = this.templateService.renderIndividualReport(reportData);
@@ -290,13 +288,14 @@ export class ReportsService {
     to: string,
   ): Promise<any[]> {
     try {
+      // ADT listener espera from/to/days (no startDate/endDate/limit)
       const payload = {
         contractorId,
-        startDate: from,
-        endDate: to,
-        limit: 30,
-        startHour: 8,
-        endHour: 17,
+        from,
+        to,
+        days: 30,
+        startHour: 0,
+        endHour: 23,
       };
 
       return firstValueFrom(
@@ -320,13 +319,14 @@ export class ReportsService {
     to: string,
   ): Promise<any[]> {
     try {
+      // ADT productivity filtra hour < endHour (exclusivo) → +1 para incluir 23:00
       const payload = {
         contractorId,
-        startDate: from,
-        endDate: to,
-        limit: 30,
-        startHour: 8,
-        endHour: 18,
+        from,
+        to,
+        days: 30,
+        startHour: 0,
+        endHour: 24,
       };
 
       return firstValueFrom(
@@ -352,8 +352,9 @@ export class ReportsService {
     try {
       const payload = {
         contractorId,
-        startDate: from,
-        endDate: to,
+        from,
+        to,
+        days: 30,
       };
 
       return firstValueFrom(
@@ -366,6 +367,99 @@ export class ReportsService {
       this.logger.error('Error fetching contractor sessions by day', error);
       return [];
     }
+  }
+
+  /**
+   * Igual que ReportDetailView: rellena 00–23, desacumula duración y combina productividad.
+   */
+  private buildHourlyChartData(
+    durationRows: any[],
+    productivityRows: any[],
+    startHour: number,
+    endHour: number,
+  ): Array<{ hour: string; duration: number; productivity: number }> {
+    const durationByHour = new Map<number, number>();
+    for (const row of durationRows || []) {
+      durationByHour.set(Number(row.hour), Number(row.avg_duration_seconds) || 0);
+    }
+
+    const productivityByHour = new Map<number, number>();
+    for (const row of productivityRows || []) {
+      productivityByHour.set(
+        Number(row.hour),
+        Math.round(Number(row.avg_productivity_score) || 0),
+      );
+    }
+
+    const result: Array<{ hour: string; duration: number; productivity: number }> =
+      [];
+
+    for (let h = startHour; h <= endHour; h++) {
+      const seconds = durationByHour.get(h) ?? 0;
+      let durationHours = Math.round((seconds / 3600) * 100) / 100;
+
+      if (result.length > 0) {
+        const prevSeconds = durationByHour.get(h - 1) ?? 0;
+        const prevHours = Math.round((prevSeconds / 3600) * 100) / 100;
+        durationHours = Math.max(0, durationHours - prevHours);
+      }
+
+      durationHours = Math.min(1, durationHours);
+
+      result.push({
+        hour: `${String(h).padStart(2, '0')}:00`,
+        duration: durationHours,
+        productivity: productivityByHour.get(h) ?? 0,
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * KPIs de Session & Connectivity (igual que ReportDetailView).
+   */
+  private buildSessionConnectivityStats(
+    sessionsByDay: Array<{ session_day: string; sessions: any[] }>,
+  ): {
+    sessionCount: number;
+    avgDurationSeconds: number;
+    avgProductivity: number;
+    avgDurationLabel: string;
+    avgProductivityLabel: string;
+  } {
+    const allSessions = (sessionsByDay || []).flatMap((d) => d.sessions || []);
+    const count = allSessions.length;
+    if (count === 0) {
+      return {
+        sessionCount: 0,
+        avgDurationSeconds: 0,
+        avgProductivity: 0,
+        avgDurationLabel: '0h 00m',
+        avgProductivityLabel: '0%',
+      };
+    }
+
+    const totalSeconds = allSessions.reduce(
+      (sum, s) => sum + (Number(s.total_seconds) || 0),
+      0,
+    );
+    const totalProductivity = allSessions.reduce(
+      (sum, s) => sum + (Number(s.productivity_score) || 0),
+      0,
+    );
+    const avgDurationSeconds = totalSeconds / count;
+    const avgProductivity = totalProductivity / count;
+    const hours = Math.floor(avgDurationSeconds / 3600);
+    const minutes = Math.floor((avgDurationSeconds % 3600) / 60);
+
+    return {
+      sessionCount: count,
+      avgDurationSeconds,
+      avgProductivity,
+      avgDurationLabel: `${hours}h ${String(minutes).padStart(2, '0')}m`,
+      avgProductivityLabel: `${Math.round(avgProductivity)}%`,
+    };
   }
 
   /**

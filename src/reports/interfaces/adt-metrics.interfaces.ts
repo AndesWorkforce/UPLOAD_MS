@@ -74,6 +74,16 @@ export interface AdtUserMetric {
   total_session_time_seconds?: number;
   effective_work_seconds?: number;
   effectiveWorkSeconds?: number;
+  app_usage?: Array<{
+    appName: string;
+    seconds: number;
+    type?: string;
+    category?: string | null;
+  }>;
+  browser_usage?: Array<{
+    domain: string;
+    seconds: number;
+  }>;
 }
 
 /**
@@ -97,4 +107,14 @@ export interface NormalizedUserActivity {
   totalIdleBeats?: number;
   effectiveWorkSeconds?: number; // Tiempo activo en segundos
   totalSessionSeconds?: number; // Tiempo total de sesión en segundos
+  appUsage?: Array<{
+    appName: string;
+    seconds: number;
+    type?: string;
+    category?: string | null;
+  }>;
+  browserUsage?: Array<{
+    domain: string;
+    seconds: number;
+  }>;
 }

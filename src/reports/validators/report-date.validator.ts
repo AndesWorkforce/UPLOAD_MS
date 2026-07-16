@@ -11,8 +11,6 @@ export interface ValidatedDateRange {
  */
 @Injectable()
 export class ReportDateValidator {
-  private readonly MAX_DAYS_RANGE = 90;
-
   /**
    * Valida el rango de fechas según reglas de negocio
    * @throws RpcException si las fechas no son válidas
@@ -22,7 +20,6 @@ export class ReportDateValidator {
     const toDate = this.parseDate(to);
 
     this.validateDateOrder(fromDate, toDate);
-    this.validateMaxRange(fromDate, toDate);
     this.validateNotFuture(fromDate, toDate);
 
     return {
@@ -55,21 +52,6 @@ export class ReportDateValidator {
       throw new RpcException({
         status: 400,
         message: 'Start date must be before or equal to end date',
-      });
-    }
-  }
-
-  /**
-   * Valida que el rango no exceda los días máximos permitidos
-   */
-  private validateMaxRange(fromDate: Date, toDate: Date): void {
-    const diffMs = toDate.getTime() - fromDate.getTime();
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-    if (diffDays > this.MAX_DAYS_RANGE) {
-      throw new RpcException({
-        status: 400,
-        message: `Date range cannot exceed ${this.MAX_DAYS_RANGE} days`,
       });
     }
   }
