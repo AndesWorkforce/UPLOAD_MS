@@ -56,6 +56,13 @@ export interface IndividualReportData extends ReportData {
   hourlyData?: HourlyChartData[];
   sessions?: ContractorSession[];
   sessionsByDay?: Array<{ session_day: string; sessions: ContractorSession[] }>;
+  sessionConnectivity?: {
+    sessionCount: number;
+    avgDurationSeconds: number;
+    avgProductivity: number;
+    avgDurationLabel: string;
+    avgProductivityLabel: string;
+  };
   usageDistribution?: Array<{ type: string; percentage: number; color: string }>;
 }
 
@@ -71,6 +78,7 @@ export class IndividualReportBuilder extends ReportDataBuilder {
   buildIndividualReport(
     adtMetrics: AdtMetricsResponse,
     metadata: ReportMetadata,
+    rawMetrics?: unknown,
   ): IndividualReportData {
     const baseReport = this.build(adtMetrics, metadata);
 
@@ -82,8 +90,8 @@ export class IndividualReportBuilder extends ReportDataBuilder {
     const contractorData = baseReport.items[0];
     const summary = baseReport.summary;
 
-    // Extraer datos adicionales del raw response
-    const rawItem = adtMetrics.items[0] as any;
+    // Preferir payload crudo de ADT (tiene app_usage); fallback al normalizado
+    const appsSource = this.resolveAppsSource(adtMetrics, rawMetrics);
 
     return {
       ...baseReport,
@@ -96,11 +104,41 @@ export class IndividualReportBuilder extends ReportDataBuilder {
       ),
       insights: this.buildInsights(contractorData, metadata),
       // Datos adicionales para gráficos y visualizaciones
-      topApps: this.extractTopApps(rawItem),
-      topWebsites: this.extractTopWebsites(rawItem),
-      usageDistribution: this.buildUsageDistribution(rawItem),
+      topApps: this.extractTopApps(appsSource),
+      topWebsites: this.extractTopWebsites(appsSource),
+      usageDistribution: this.buildUsageDistribution(appsSource),
       // hourlyData, sessions y sessionsByDay se agregarán desde el servicio de reportes
       // ya que requieren llamadas adicionales a ADT_MS
+    };
+  }
+
+  /**
+   * Resuelve la fuente de apps/browser: payload crudo ADT o item normalizado.
+   */
+  private resolveAppsSource(
+    adtMetrics: AdtMetricsResponse,
+    rawMetrics?: unknown,
+  ): any {
+    if (rawMetrics && typeof rawMetrics === 'object') {
+      if (Array.isArray(rawMetrics) && rawMetrics.length > 0) {
+        return rawMetrics[0];
+      }
+      const raw = rawMetrics as Record<string, unknown>;
+      if (Array.isArray(raw.items) && raw.items.length > 0) {
+        return raw.items[0];
+      }
+      if (Array.isArray(raw.app_usage) || Array.isArray(raw.browser_usage)) {
+        return raw;
+      }
+      if (raw.consolidated && typeof raw.consolidated === 'object') {
+        return raw.consolidated;
+      }
+    }
+
+    const normalized = adtMetrics.items[0] as any;
+    return {
+      app_usage: normalized?.appUsage || normalized?.app_usage || [],
+      browser_usage: normalized?.browserUsage || normalized?.browser_usage || [],
     };
   }
 
@@ -247,7 +285,8 @@ export class IndividualReportBuilder extends ReportDataBuilder {
       .map((app) => ({
         appName: app.appName || app.app_name || 'Unknown',
         seconds: app.seconds || 0,
-        type: app.type || 'Other',
+        type: app.type || undefined,
+        category: app.category ?? null,
         percentage: totalSeconds > 0 ? Math.round((app.seconds / totalSeconds) * 100) : 0,
       }))
       .sort((a, b) => b.seconds - a.seconds)

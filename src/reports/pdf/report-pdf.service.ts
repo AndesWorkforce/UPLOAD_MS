@@ -39,9 +39,21 @@ export class ReportPdfService implements OnModuleInit, OnModuleDestroy {
       // Establecer timeout para evitar cuelgues
       page.setDefaultTimeout(this.PDF_TIMEOUT_MS);
 
+      // Viewport A4 (~794px a 96dpi) para que Chart.js respete el ancho del PDF
+      await page.setViewport({
+        width: 794,
+        height: 1123,
+        deviceScaleFactor: 1,
+      });
+
       await page.setContent(html, {
         waitUntil: 'networkidle0',
         timeout: this.PDF_TIMEOUT_MS,
+      });
+
+      // Esperar a que Chart.js termine de renderizar los canvas
+      await page.evaluate(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 300));
       });
 
       const pdfBuffer = await page.pdf({

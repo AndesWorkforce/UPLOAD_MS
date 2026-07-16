@@ -2,42 +2,48 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Individual Productivity Report</title>
+  <title>Detalle de Reporte</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: Arial, sans-serif; 
-      padding: 32px; 
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 28px;
       color: #000000;
       background: #FFFFFF;
     }
 
-    /* Header */
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
       border-bottom: 2px solid #0097B2;
     }
-    .header h1 { 
-      font-size: 24px;
+    .header h1 {
+      font-size: 22px;
       font-weight: 600;
-      color: #000000;
+    }
+    .header .period {
+      font-size: 13px;
+      color: #6D6D6D;
     }
 
-    /* Contractor Info Card */
-    .contractor-info {
+    .card {
       background: #FFFFFF;
       border: 1px solid rgba(166,166,166,0.5);
       border-radius: 5px;
-      padding: 20px;
-      margin-bottom: 20px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .contractor-info {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 14px;
     }
     .contractor-info .avatar {
       width: 55px;
@@ -49,324 +55,270 @@
       justify-content: center;
       font-size: 24px;
       color: #9CA3AF;
-    }
-    .contractor-info .info {
-      flex: 1;
+      flex-shrink: 0;
     }
     .contractor-info .name {
       font-size: 20px;
       font-weight: 600;
-      color: #000000;
       margin-bottom: 4px;
     }
     .contractor-info .details {
-      font-size: 14px;
+      font-size: 13px;
       color: #000000;
     }
 
-    /* Period Info */
-    .period-info {
-      background: #F8FAFC;
-      border: 1px solid rgba(166,166,166,0.5);
-      border-radius: 5px;
-      padding: 12px 16px;
-      margin-bottom: 20px;
-      font-size: 14px;
-      color: #6D6D6D;
-      text-align: center;
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 14px;
     }
 
-    /* Metrics Grid */
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
+    /* Input Totals — título arriba, métricas en fila */
+    .input-totals-row {
+      display: flex;
+      gap: 12px;
     }
-
-    /* Input Totals */
-    .input-card {
-      background: #FFFFFF;
+    .input-metric {
+      flex: 1;
       border: 1px solid rgba(166,166,166,0.25);
       border-radius: 5px;
-      padding: 15px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      padding: 12px;
+      min-height: 63px;
     }
-    .input-card .icon {
-      font-size: 32px;
-    }
-    .input-card .info {
-      flex: 1;
-    }
-    .input-card .label {
+    .input-metric .label {
       font-size: 12px;
       font-weight: 300;
-      color: #000000;
       margin-bottom: 4px;
     }
-    .input-card .value {
+    .input-metric .value {
       font-size: 20px;
       font-weight: 600;
-      color: #000000;
     }
 
-    /* Top Lists (Apps/Websites) */
-    .top-list-card {
-      background: #FFFFFF;
+    /* Session & Connectivity KPIs */
+    .kpi-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .kpi {
+      flex: 1;
       border: 1px solid rgba(166,166,166,0.5);
       border-radius: 5px;
-      padding: 20px;
-      margin-bottom: 20px;
+      padding: 14px;
     }
-    .top-list-card .title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #000000;
-      margin-bottom: 15px;
+    .kpi.duration { background: #e8f4f6; border-color: rgba(166,166,166,0.3); }
+    .kpi.productivity { background: rgba(125,164,10,0.15); }
+    .kpi .label {
+      font-size: 13px;
+      color: #6D6D6D;
+      margin-bottom: 4px;
     }
-    .top-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(166,166,166,0.15);
-    }
-    .top-item:last-child {
-      border-bottom: none;
-    }
-    .top-item .name {
-      font-size: 14px;
-      color: #000000;
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .top-item .time {
-      font-size: 14px;
-      font-weight: 600;
-      color: #0097B2;
-      margin-left: 10px;
-    }
-
-    /* Usage Distribution */
-    .usage-distribution {
-      margin-top: 20px;
-      padding-top: 15px;
-      border-top: 1px solid rgba(166,166,166,0.15);
-    }
-    .usage-distribution .subtitle {
-      font-size: 12px;
-      font-weight: 600;
-      color: #000000;
-      margin-bottom: 10px;
-    }
-    .distribution-bar {
-      height: 8px;
-      width: 100%;
-      border-radius: 4px;
-      display: flex;
-      overflow: hidden;
-      margin-bottom: 12px;
-    }
-    .distribution-segment {
-      height: 100%;
-    }
-    .distribution-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-    }
-    .legend-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: #000000;
-    }
-
-    /* Time Breakdown */
-    .time-breakdown {
-      background: #FFFFFF;
-      border: 1px solid rgba(166,166,166,0.5);
-      border-radius: 5px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .time-breakdown .title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #000000;
-      margin-bottom: 15px;
-    }
-    .time-breakdown .stats {
-      display: flex;
-      justify-content: space-between;
-      gap: 15px;
-    }
-    .time-breakdown .stat {
-      flex: 1;
-      text-align: center;
-    }
-    .time-breakdown .stat .value {
+    .kpi .value {
       font-size: 20px;
-      font-weight: 600;
-      color: #000000;
-      margin-bottom: 8px;
+      font-weight: 700;
     }
-    .time-breakdown .stat .label {
-      font-size: 12px;
-      font-weight: 300;
-      color: #000000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-    .time-breakdown .stat .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-    }
-    .time-breakdown .stat.active .dot { background: #0097B2; }
-    .time-breakdown .stat.idle .dot { background: #FF0004; }
 
-    /* Session & Connectivity */
-    .session-connectivity {
-      background: #FFFFFF;
-      border: 1px solid rgba(166,166,166,0.5);
-      border-radius: 5px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .session-connectivity .title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #000000;
-      margin-bottom: 15px;
-    }
     .charts-grid {
       display: flex;
       flex-direction: column;
       gap: 20px;
-    }
-    .chart-container {
-      position: relative;
-      height: 250px;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
     }
     .chart-title {
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .chart-container {
+      height: 220px;
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    .chart-container canvas {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+
+    /* Top Sites & Apps */
+    .apps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .app-item {
+      background: #F9FAFB;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .app-item .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .app-item .left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+    .app-item .name {
+      font-size: 13px;
       font-weight: 500;
-      color: #000000;
-      margin-bottom: 10px;
-      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .app-item .badge {
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .app-item .bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .app-item .sub {
+      font-size: 11px;
+      color: #6D6D6D;
+    }
+    .app-item .time {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0097B2;
+      flex-shrink: 0;
     }
 
     /* Session Summary */
-    .session-summary {
-      background: #FFFFFF;
+    .day-group {
+      margin-bottom: 18px;
       border: 1px solid rgba(166,166,166,0.5);
       border-radius: 5px;
-      padding: 20px;
-      margin-bottom: 20px;
+      padding: 14px;
+      page-break-inside: avoid;
     }
-    .session-summary .title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #000000;
-      margin-bottom: 8px;
-    }
-    .session-summary .day-group {
-      margin-bottom: 25px;
-    }
-    .session-summary .day-group:last-child {
-      margin-bottom: 0;
-    }
-    .session-summary .day-header {
+    .day-header {
       font-size: 14px;
       font-weight: 500;
-      color: #000000;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
-
-    /* Table */
-    table { 
+    table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
+      font-size: 12px;
+      margin-bottom: 12px;
     }
     thead {
-      background: rgba(166,166,166,0.1);
+      background: #F9FAFB;
+      border-bottom: 1px solid rgba(166,166,166,0.5);
     }
     th {
-      padding: 12px;
       text-align: left;
-      font-size: 12px;
+      padding: 8px 10px;
       font-weight: 600;
-      color: #000000;
-      border-bottom: 1px solid rgba(166,166,166,0.25);
     }
     td {
-      padding: 12px;
-      font-size: 12px;
-      color: #000000;
+      padding: 8px 10px;
       border-bottom: 1px solid rgba(166,166,166,0.15);
     }
-    tbody tr:last-child td {
-      border-bottom: none;
+    tbody tr:nth-child(even) { background: #E2E2E2; }
+    .prod { color: #0097B2; font-weight: 600; }
+
+    .day-totals {
+      display: flex;
+      gap: 24px;
+      padding: 10px 4px 0;
+      border-top: 1px solid rgba(166,166,166,0.35);
+    }
+    .day-totals .item .label {
+      font-size: 11px;
+      color: #6D6D6D;
+    }
+    .day-totals .item .value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0097B2;
     }
 
-    /* Footer */
     .footer {
-      margin-top: 40px;
-      padding-top: 20px;
+      margin-top: 28px;
+      padding-top: 14px;
       border-top: 1px solid rgba(166,166,166,0.25);
       text-align: center;
       font-size: 10px;
       color: #6D6D6D;
     }
+
+    .empty {
+      font-size: 13px;
+      color: #6D6D6D;
+      text-align: center;
+      padding: 16px 0;
+    }
   </style>
 </head>
 <body>
-  <!-- Header -->
   <div class="header">
-    <h1>Individual Productivity Report</h1>
-    <div style="font-size: 14px; color: #6D6D6D;">
-      {{periodStart}} - {{periodEnd}}
-    </div>
+    <h1>Detalle de Reporte</h1>
+    <div class="period">{{periodStart}} — {{periodEnd}}</div>
   </div>
 
-  <!-- Contractor Info Card -->
-  <div class="contractor-info">
+  <!-- Contractor Info (igual que la vista) -->
+  <div class="card contractor-info">
     <div class="avatar">👤</div>
-    <div class="info">
+    <div>
       <div class="name">{{contractor.name}}</div>
       <div class="details">
-        {{contractor.jobPosition}} | Team {{contractor.teamName}} | Client {{contractor.clientName}}
+        {{contractor.jobPosition}} | Equipo {{contractor.teamName}} | Cliente {{contractor.clientName}}
         {{#if contractor.country}} | {{contractor.country}}{{/if}}
       </div>
     </div>
   </div>
 
-  <!-- Period Info -->
-  <div class="period-info">
-    Report Period: {{periodStart}} to {{periodEnd}}
+  <!-- Totales de Entradas — debajo del período, arriba de los gráficos -->
+  <div class="card">
+    <div class="section-title">Totales de Entradas</div>
+    <div class="input-totals-row">
+      <div class="input-metric">
+        <div class="label">Total de Entradas de Teclado</div>
+        <div class="value">{{formatNumber metrics.totalKeyboardInputs}}</div>
+      </div>
+      <div class="input-metric">
+        <div class="label">Total de Entradas de Ratón</div>
+        <div class="value">{{formatNumber metrics.totalMouseClicks}}</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Session & Connectivity -->
-  {{#if hasChartData}}
-  <div class="session-connectivity">
-    <div class="title">Session & Connectivity</div>
+  <!-- Sesiones y Conectividad -->
+  <div class="card">
+    <div class="section-title">Sesiones y Conectividad</div>
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="label">Número de Sesiones</div>
+        <div class="value">{{sessionCount}}</div>
+      </div>
+      <div class="kpi duration">
+        <div class="label">Duración Promedio</div>
+        <div class="value">{{avgSessionDuration}}</div>
+      </div>
+      <div class="kpi productivity">
+        <div class="label">Productividad Promedio</div>
+        <div class="value">{{avgSessionProductivity}}</div>
+      </div>
+    </div>
+
+    {{#if hasChartData}}
     <div class="charts-grid">
       <div>
         <div class="chart-title">Avg. Duration</div>
@@ -375,107 +327,46 @@
         </div>
       </div>
       <div>
-        <div class="chart-title">Productivity Score</div>
+        <div class="chart-title">Avg. Productivity</div>
         <div class="chart-container">
           <canvas id="productivityChart"></canvas>
         </div>
       </div>
     </div>
-  </div>
-  {{/if}}
-
-  <!-- Input Totals -->
-  <div class="metrics-grid">
-    <div class="input-card">
-      <div class="icon">⌨️</div>
-      <div class="info">
-        <div class="label">Keyboard Inputs</div>
-        <div class="value">{{formatNumber metrics.totalKeyboardInputs}}</div>
-      </div>
-    </div>
-    <div class="input-card">
-      <div class="icon">🖱️</div>
-      <div class="info">
-        <div class="label">Mouse Clicks</div>
-        <div class="value">{{formatNumber metrics.totalMouseClicks}}</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Top Applications -->
-  {{#if topApps.length}}
-  <div class="top-list-card">
-    <div class="title">Top Applications</div>
-    {{#each topApps}}
-    <div class="top-item">
-      <div class="name">{{appName}}</div>
-      <div class="time">{{percentage}}%</div>
-    </div>
-    {{/each}}
-
-    {{#if usageDistribution.length}}
-    <div class="usage-distribution">
-      <div class="subtitle">Usage Distribution</div>
-      <div class="distribution-bar">
-        {{#each usageDistribution}}
-        <div class="distribution-segment" style="background-color: {{color}}; width: {{percentage}}%;"></div>
-        {{/each}}
-      </div>
-      <div class="distribution-legend">
-        {{#each usageDistribution}}
-        <div class="legend-item">
-          <div class="legend-dot" style="background-color: {{color}};"></div>
-          <div class="legend-label">{{type}} ({{percentage}}%)</div>
-        </div>
-        {{/each}}
-      </div>
-    </div>
+    {{else}}
+    <div class="empty">Sin datos de gráficos para el período seleccionado</div>
     {{/if}}
   </div>
-  {{/if}}
 
-  <!-- Top Websites -->
-  {{#if topWebsites.length}}
-  <div class="top-list-card">
-    <div class="title">Top Websites</div>
-    {{#each topWebsites}}
-    <div class="top-item">
-      <div class="name">{{domain}}</div>
-      <div class="time">{{percentage}}%</div>
-    </div>
-    {{/each}}
-  </div>
-  {{/if}}
-
-  <!-- Time Breakdown -->
-  <div class="time-breakdown">
-    <div class="title">Time Breakdown</div>
-    <div class="stats">
-      <div class="stat">
-        <div class="value">{{avgDuration}}</div>
-        <div class="label">Total Time</div>
-      </div>
-      <div class="stat active">
-        <div class="value">{{avgActiveTime}}</div>
-        <div class="label">
-          <span class="dot"></span>
-          Active Time
+  <!-- Top Sites & Apps -->
+  <div class="card">
+    <div class="section-title">Top Sites &amp; Apps</div>
+    {{#if topApps.length}}
+    <div class="apps-grid">
+      {{#each topApps}}
+      <div class="app-item">
+        <div class="top">
+          <div class="left">
+            <div class="name">{{appName}}</div>
+          </div>
+          <div class="badge">{{categoryBadge}}</div>
+        </div>
+        <div class="bottom">
+          <div class="sub">Tiempo de uso</div>
+          <div class="time">{{timeLabel}}</div>
         </div>
       </div>
-      <div class="stat idle">
-        <div class="value">{{avgIdleTime}}</div>
-        <div class="label">
-          <span class="dot"></span>
-          Inactive Time
-        </div>
-      </div>
+      {{/each}}
     </div>
+    {{else}}
+    <div class="empty">Sin datos de aplicaciones</div>
+    {{/if}}
   </div>
 
-  <!-- Session Summary -->
-  {{#if sessionsByDay.length}}
-  <div class="session-summary">
-    <div class="title">Session Summary</div>
+  <!-- Resumen de Sesiones -->
+  {{#if hasSessions}}
+  <div class="card">
+    <div class="section-title">Resumen de Sesiones</div>
     {{#each sessionsByDay}}
     <div class="day-group">
       <div class="day-header">{{session_day}}</div>
@@ -486,8 +377,8 @@
             <th>Start Time</th>
             <th>End Time</th>
             <th>Duration</th>
-            <th>Active</th>
-            <th>Idle</th>
+            <th>Active Time</th>
+            <th>Idle Time</th>
             <th>Productivity</th>
           </tr>
         </thead>
@@ -497,101 +388,133 @@
             <td>{{index}}</td>
             <td>{{session_start}}</td>
             <td>{{session_end}}</td>
-            <td style="font-weight: 600;">{{formatSecondsToTime total_seconds}}</td>
-            <td>{{formatSecondsToTime active_seconds}}</td>
-            <td>{{formatSecondsToTime idle_seconds}}</td>
-            <td style="font-weight: 600; color: #0097B2;">{{productivity_score}}%</td>
+            <td>{{durationLabel}}</td>
+            <td>{{activeLabel}}</td>
+            <td>{{idleLabel}}</td>
+            <td class="prod">{{productivity_score}}%</td>
           </tr>
           {{/each}}
         </tbody>
       </table>
+      <div class="day-totals">
+        <div class="item">
+          <div class="label">Total Session</div>
+          <div class="value">{{totals.count}}</div>
+        </div>
+        <div class="item">
+          <div class="label">Total Avg. Duration</div>
+          <div class="value">{{totals.avgDuration}}</div>
+        </div>
+        <div class="item">
+          <div class="label">Total Avg. Productivity</div>
+          <div class="value">{{totals.avgProductivity}}</div>
+        </div>
+      </div>
     </div>
     {{/each}}
   </div>
   {{/if}}
 
-  <!-- Footer -->
   <div class="footer">
-    Generated on {{generatedAt}} | Environment: {{summary.environment}} | Source: {{summary.source}}
+    Generado el {{generatedAt}} | Environment: {{summary.environment}}
   </div>
 
   {{#if hasChartData}}
   <script>
-    // Initialize Chart.js for Duration Chart
-    document.addEventListener('DOMContentLoaded', function() {
-      const durationCtx = document.getElementById('durationChart');
-      const productivityCtx = document.getElementById('productivityChart');
+    (function () {
+      var labels = {{{chartLabels}}};
+      var durationValues = {{{durationChartValues}}};
+      var productivityValues = {{{productivityChartValues}}};
 
-      if (durationCtx && {{{hasDurationData}}}) {
+      function fmtMinutes(mins) {
+        var m = Math.round(mins || 0);
+        if (m >= 60) {
+          var h = Math.floor(m / 60);
+          var rem = m % 60;
+          return h + 'h ' + rem + 'm';
+        }
+        return m + 'm';
+      }
+
+      var durationCtx = document.getElementById('durationChart');
+      if (durationCtx) {
         new Chart(durationCtx, {
           type: 'line',
           data: {
-            labels: {{{chartLabels}}},
+            labels: labels,
             datasets: [{
               label: 'Avg. Duration',
-              data: {{{durationChartValues}}},
+              data: durationValues,
               borderColor: '#0097B2',
-              backgroundColor: 'rgba(0, 151, 178, 0.1)',
+              backgroundColor: 'rgba(0, 151, 178, 0.15)',
               borderWidth: 2,
               fill: true,
-              tension: 0.3,
-              pointRadius: 4,
+              tension: 0.35,
+              pointRadius: 3,
               pointBackgroundColor: '#0097B2',
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: false,
+            layout: {
+              padding: { top: 4, right: 16, bottom: 0, left: 0 }
+            },
             plugins: {
-              legend: { display: false },
+              legend: { display: true, position: 'bottom' },
               tooltip: {
                 callbacks: {
-                  label: function(context) {
-                    return 'Duration: ' + context.parsed.y.toFixed(2) + 'h';
-                  }
+                  label: function (ctx) { return 'Avg. Duration: ' + fmtMinutes(ctx.parsed.y); }
                 }
               }
             },
             scales: {
               y: {
                 beginAtZero: true,
-                title: { display: true, text: 'Hours' }
+                max: 60,
+                ticks: {
+                  callback: function (v) { return v + 'm'; }
+                }
               },
               x: {
-                title: { display: true, text: 'Time' }
+                ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 12 }
               }
             }
           }
         });
       }
 
-      if (productivityCtx && {{{hasProductivityData}}}) {
+      var productivityCtx = document.getElementById('productivityChart');
+      if (productivityCtx) {
         new Chart(productivityCtx, {
           type: 'line',
           data: {
-            labels: {{{chartLabels}}},
+            labels: labels,
             datasets: [{
-              label: 'Productivity',
-              data: {{{productivityChartValues}}},
+              label: 'Avg. Productivity',
+              data: productivityValues,
               borderColor: '#7DA40A',
-              backgroundColor: 'rgba(125, 164, 10, 0.1)',
+              backgroundColor: 'rgba(125, 164, 10, 0.15)',
               borderWidth: 2,
               fill: true,
-              tension: 0.3,
-              pointRadius: 4,
+              tension: 0.35,
+              pointRadius: 3,
               pointBackgroundColor: '#7DA40A',
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: false,
+            layout: {
+              padding: { top: 4, right: 16, bottom: 0, left: 0 }
+            },
             plugins: {
-              legend: { display: false },
+              legend: { display: true, position: 'bottom' },
               tooltip: {
                 callbacks: {
-                  label: function(context) {
-                    return 'Productivity: ' + context.parsed.y.toFixed(0) + '%';
-                  }
+                  label: function (ctx) { return 'Avg. Productivity: ' + Math.round(ctx.parsed.y) + '%'; }
                 }
               }
             },
@@ -599,16 +522,18 @@
               y: {
                 beginAtZero: true,
                 max: 100,
-                title: { display: true, text: 'Productivity %' }
+                ticks: {
+                  callback: function (v) { return v + '%'; }
+                }
               },
               x: {
-                title: { display: true, text: 'Time' }
+                ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 12 }
               }
             }
           }
         });
       }
-    });
+    })();
   </script>
   {{/if}}
 </body>

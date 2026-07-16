@@ -46,8 +46,9 @@ export class TemplateService implements OnModuleInit {
   private registerHelpers(): void {
     // Helper para formatear números con separadores de miles
     handlebars.registerHelper('formatNumber', (value: number) => {
-      if (typeof value !== 'number') return value;
-      return value.toLocaleString('en-US');
+      const n = Number(value);
+      if (!Number.isFinite(n)) return value ?? 0;
+      return n.toLocaleString('es-ES');
     });
 
     // Helper para formatear porcentajes (redondear a 2 decimales)
@@ -58,10 +59,10 @@ export class TemplateService implements OnModuleInit {
 
     // Helper para formatear segundos a tiempo HH:MM
     handlebars.registerHelper('formatSecondsToTime', (seconds: number) => {
-      if (typeof seconds !== 'number') return '0h 00m';
-      const hours = Math.floor(seconds / 3600);
-      const minutes = Math.floor((seconds % 3600) / 60);
-      return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+      const safe = Number(seconds) || 0;
+      const hours = Math.floor(safe / 3600);
+      const minutes = Math.floor((safe % 3600) / 60);
+      return `${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m`;
     });
 
     // Helper para determinar clase CSS de actividad
@@ -236,6 +237,31 @@ export class TemplateService implements OnModuleInit {
   }
 
   /**
+   * Formatea fechas del reporte (acepta ISO o YYYY-MM-DD).
+   * Evita Invalid Date al concatenar 'T12:00:00' sobre un ISO ya completo.
+   */
+  private formatReportDate(value: string): string {
+    if (!value) return '';
+    const dateOnly = value.includes('T') ? value.split('T')[0] : value;
+    const date = new Date(`${dateOnly}T12:00:00`);
+    if (Number.isNaN(date.valueOf())) {
+      return value;
+    }
+    return date.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  }
+
+  private getCategoryBadge(category?: string | null): string {
+    if (category === 'productive') return '✅';
+    if (category === 'neutral') return '⚪';
+    if (category === 'non_productive') return '❌';
+    return '⚠️';
+  }
+
+  /**
    * Formatea los filtros aplicados de manera legible
    */
   private formatFilters(
@@ -350,21 +376,28 @@ export class TemplateService implements OnModuleInit {
    * Prepara datos para el template individual
    */
   private prepareIndividualTemplateData(data: IndividualReportData): Record<string, unknown> {
-    const { summary, contractor, metrics, topApps, topWebsites, hourlyData, sessions, sessionsByDay, usageDistribution } = data;
+    const {
+      summary,
+      contractor,
+      metrics,
+      topApps,
+      hourlyData,
+      sessions,
+      sessionsByDay,
+      sessionConnectivity,
+    } = data;
 
-    // Calcular tiempos desde metrics (igual que el frontend)
-    // Tiempo total: totalBeats * 15 (cada beat = 15 segundos)
-    const totalSessionSeconds = metrics.totalBeats * 15;
-    // Tiempo activo: effectiveWorkSeconds directamente
-    const avgActiveSeconds = metrics.effectiveWorkSeconds || 0;
-    // Tiempo inactivo: diferencia entre total y activo
-    const avgIdleSeconds = totalSessionSeconds - avgActiveSeconds;
+    const hasChartData = !!(hourlyData && hourlyData.length > 0);
+    const chartLabels = hasChartData ? hourlyData.map((h) => h.hour) : [];
+    // Chart UI: duración en minutos (0–60), igual que el eje del frontend
+    const durationChartValues = hasChartData
+      ? hourlyData.map((h) => Math.round((h.duration || 0) * 60))
+      : [];
+    const productivityChartValues = hasChartData
+      ? hourlyData.map((h) => h.productivity)
+      : [];
 
-    // Preparar datos de charts
-    const hasChartData = hourlyData && hourlyData.length > 0;
-    const chartLabels = hasChartData ? hourlyData.map(h => h.hour) : [];
-    const durationChartValues = hasChartData ? hourlyData.map(h => h.duration) : [];
-    const productivityChartValues = hasChartData ? hourlyData.map(h => h.productivity) : [];
+    const formattedSessionsByDay = this.formatSessionsByDay(sessionsByDay || []);
 
     return {
       summary: {
@@ -384,18 +417,19 @@ export class TemplateService implements OnModuleInit {
         activityPercentage: Math.round(metrics.activityPercentage * 100) / 100,
         productivityScore: Math.round(metrics.productivityScore * 100) / 100,
       },
-      periodStart: new Date(summary.from).toLocaleDateString(),
-      periodEnd: new Date(summary.to).toLocaleDateString(),
-      generatedAt: new Date().toLocaleString(),
-      avgDuration: this.formatSecondsToTime(totalSessionSeconds),
-      avgActiveTime: this.formatSecondsToTime(avgActiveSeconds),
-      avgIdleTime: this.formatSecondsToTime(avgIdleSeconds),
-      // Top Apps
-      topApps: topApps || [],
-      // Top Websites
-      topWebsites: topWebsites || [],
-      // Usage Distribution
-      usageDistribution: usageDistribution || [],
+      periodStart: this.formatReportDate(summary.from),
+      periodEnd: this.formatReportDate(summary.to),
+      generatedAt: new Date().toLocaleString('es-ES'),
+      // Session & Connectivity KPIs
+      sessionCount: sessionConnectivity?.sessionCount ?? 0,
+      avgSessionDuration: sessionConnectivity?.avgDurationLabel ?? '0h 00m',
+      avgSessionProductivity: sessionConnectivity?.avgProductivityLabel ?? '0%',
+      // Top Sites & Apps (solo apps, como ReportDetailView)
+      topApps: (topApps || []).map((app) => ({
+        ...app,
+        timeLabel: this.formatSecondsToTime(Number(app.seconds) || 0),
+        categoryBadge: this.getCategoryBadge(app.category),
+      })),
       // Chart data
       hasChartData,
       hasDurationData: hasChartData,
@@ -405,7 +439,8 @@ export class TemplateService implements OnModuleInit {
       productivityChartValues: JSON.stringify(productivityChartValues),
       // Sessions
       sessions: sessions || [],
-      sessionsByDay: this.formatSessionsByDay(sessionsByDay || []),
+      sessionsByDay: formattedSessionsByDay,
+      hasSessions: formattedSessionsByDay.length > 0,
     };
   }
 
@@ -414,37 +449,50 @@ export class TemplateService implements OnModuleInit {
    */
   private formatSessionsByDay(sessionsByDay: any[]): any[] {
     return sessionsByDay.map((dayGroup) => {
-      // Formatear fecha del día a formato legible (e.g., "February 9, 2026")
       const dayDate = new Date(dayGroup.session_day + 'T12:00:00');
-      const formattedDay = dayDate.toLocaleDateString('en-US', {
+      const formattedDay = dayDate.toLocaleDateString('es-ES', {
         month: 'long',
         day: 'numeric',
         year: 'numeric',
       });
 
-      // Formatear cada sesión
-      const formattedSessions = dayGroup.sessions.map((session: any, index: number) => {
-        // Extraer solo la hora de los timestamps
-        const startTime = this.extractTime(session.session_start);
-        const endTime = this.extractTime(session.session_end);
-
-        // Redondear productividad a entero
-        const productivity = Math.round(session.productivity_score);
+      const sessions = (dayGroup.sessions || []).map((session: any, index: number) => {
+        const total = Number(session.total_seconds) || 0;
+        const active = Number(session.active_seconds) || 0;
+        const idle = Number(session.idle_seconds) || 0;
+        const productivity = Math.round(Number(session.productivity_score) || 0);
 
         return {
           index: index + 1,
-          session_start: startTime,
-          session_end: endTime,
-          total_seconds: session.total_seconds,
-          active_seconds: session.active_seconds,
-          idle_seconds: session.idle_seconds,
+          session_start: this.extractTime(session.session_start),
+          session_end: this.extractTime(session.session_end),
+          durationLabel: this.formatSecondsToTime(total),
+          activeLabel: this.formatSecondsToTime(active),
+          idleLabel: this.formatSecondsToTime(idle),
           productivity_score: productivity,
+          total_seconds: total,
+          productivity_raw: Number(session.productivity_score) || 0,
         };
       });
 
+      const count = sessions.length;
+      const avgDuration =
+        count > 0
+          ? sessions.reduce((s, x) => s + x.total_seconds, 0) / count
+          : 0;
+      const avgProductivity =
+        count > 0
+          ? sessions.reduce((s, x) => s + x.productivity_raw, 0) / count
+          : 0;
+
       return {
         session_day: formattedDay,
-        sessions: formattedSessions,
+        sessions,
+        totals: {
+          count,
+          avgDuration: this.formatSecondsToTime(avgDuration),
+          avgProductivity: `${Math.round(avgProductivity)}%`,
+        },
       };
     });
   }

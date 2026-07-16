@@ -94,6 +94,10 @@ export class AdtMetricsMapper {
         0,
       effectiveWorkSeconds,
       totalSessionSeconds,
+      appUsage: Array.isArray(metric.app_usage) ? metric.app_usage : [],
+      browserUsage: Array.isArray(metric.browser_usage)
+        ? metric.browser_usage
+        : [],
     };
   }
 
