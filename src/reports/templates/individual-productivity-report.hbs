@@ -144,11 +144,17 @@
       width: 100% !important;
     }
 
-    /* Top Sites & Apps */
+    /* Top Sites & Apps — 1 columna en PDF (la web sigue en 2) */
     .apps-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: flex !important;
+      flex-direction: column !important;
       gap: 10px;
+      width: 100%;
+    }
+    .apps-grid .app-item {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     .app-item {
       background: #F9FAFB;
